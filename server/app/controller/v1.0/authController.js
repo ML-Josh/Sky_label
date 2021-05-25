@@ -50,7 +50,7 @@ const authController = {
       token.save();
 
       // Save user access token in cookie
-      cookie.setCookie(req, res, '__SKLT', _access_token, { maxAge: 86400000 });
+      cookie.setCookie(req, res, '__SKLT', _access_token, { maxAge: 3600000 });
 
       res.json({
         status: 'OK',

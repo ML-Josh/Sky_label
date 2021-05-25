@@ -7,25 +7,16 @@ const _schema = new mongoose.Schema({
   description: String,
   image: String,
   remarks: String,
-  tag: String,
   categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
-  tags: [],
+  tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
   privacy: {
     type: String,
     default: 'public',
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
   },
   interaction_count: {
     type: Number,
     default: 0,
   },
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Label', _schema);

@@ -25,12 +25,14 @@ router.use('/api/v1.0/account', limiter);
 */
 
 // 以下將其他router或controller接上
-router.use('/api/v1.0/auth', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 86400000 }, secret: config.JWT_SECRET }), require('./auth'));
+router.use('/api/v1.0/auth', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 360000 }, secret: config.JWT_SECRET }), require('./auth'));
 
-router.use('/api/v1.0/label', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 86400000 }, secret: config.JWT_SECRET }), require('./label'));
+router.use('/api/v1.0/label', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 360000 }, secret: config.JWT_SECRET }), require('./label'));
 
-router.use('/api/v1.0/category', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 86400000 }, secret: config.JWT_SECRET }), require('./category'));
+router.use('/api/v1.0/category', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 360000 }, secret: config.JWT_SECRET }), require('./category'));
 
-router.use('/api/v1.0', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 86400000 }, secret: config.JWT_SECRET }), require('./home'));
+router.use('/api/v1.0/tag', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 360000 }, secret: config.JWT_SECRET }), require('./tag'));
+
+router.use('/api/v1.0', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 360000 }, secret: config.JWT_SECRET }), require('./home'));
 
 module.exports = (app) => { app.use(router); };

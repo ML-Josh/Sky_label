@@ -7,10 +7,6 @@ const _schema = new mongoose.Schema({
   },
   title: String,
   labels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Label' }],
-  created_at: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Category', _schema);

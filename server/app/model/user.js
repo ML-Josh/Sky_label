@@ -23,10 +23,6 @@ const _schema = new mongoose.Schema({
     required: true,
     default: 'USER',
   },
-  created_at: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('User', _schema);
