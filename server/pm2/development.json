@@ -1,0 +1,15 @@
+{
+  "apps": [
+    {
+      "name": "NodeJSExpress:8080",
+      "script": "server/index.js",
+      "watch": false,
+      "exec_mode": "fork_mode",
+      "env": {
+        "NODE_ENV": "development",
+        "APP_ENV": "development",
+        "PORT": "8080"
+      }
+    }
+  ]
+}

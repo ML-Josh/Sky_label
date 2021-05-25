@@ -1,0 +1,63 @@
+{
+  "name": "nodejs_express_template",
+  "version": "1.0.0",
+  "description": "NodeJS Express的初始化框架。",
+  "scripts": {
+    "dev": "nodemon server",
+    "stage": "cross-env NODE_ENV=production APP_ENV=stage node server",
+    "apidoc": "apidoc -i ./server/app/ -o ./doc/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MedialandDev/NodeJS_Express_Template.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MedialandDev/NodeJS_Express_Template/issues"
+  },
+  "homepage": "https://github.com/MedialandDev/NodeJS_Express_Template#readme",
+  "_moduleAliases": {
+    "~root": "./",
+    "~server": "server"
+  },
+  "apidoc": {
+    "name": "NodeJS Express Template v1.0",
+    "version": "1.0.0",
+    "title": "自訂初始框架 for nodejs",
+    "url": "http://localhost:8080",
+    "header": {
+      "title": "header",
+      "filename": "./server/app/apidoc/header.md"
+    },
+    "footer": {
+      "title": "footer",
+      "filename": "./server/app/apidoc/footer.md"
+    },
+    "template": {
+      "withCompare": false
+    }
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "body-parser": "^1.18.3",
+    "cookie-parser": "^1.4.3",
+    "cross-env": "^7.0.2",
+    "express": "^4.16.3",
+    "express-rate-limit": "^5.1.3",
+    "helmet": "^4.1.1",
+    "jsonwebtoken": "^8.5.1",
+    "log4js": "^6.3.0",
+    "module-alias": "^2.1.0",
+    "mongoose": "^5.10.5",
+    "pug": "^3.0.0",
+    "validator": "^13.1.1"
+  },
+  "devDependencies": {
+    "apidoc": "^0.25.0",
+    "eslint": "^7.26.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.22.1"
+  }
+}
