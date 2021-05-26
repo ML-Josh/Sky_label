@@ -115,7 +115,7 @@ const labelController = {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
 
-      const labels = await Label.find({ user_sky_id: res.locals.__jwtPayload.sky_id }).populate('categories', 'title');
+      const labels = await Label.find({ user_sky_id: res.locals.__jwtPayload.sky_id }).populate('categories', 'title').populate('tags', 'title');
 
       res.json({
         status: 'OK',

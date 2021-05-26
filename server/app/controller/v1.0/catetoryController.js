@@ -82,7 +82,7 @@ const categoryController = {
       const deletedCategory = await Category.findOneAndDelete({ user_sky_id, _id: req.params.id });
       if (!deletedCategory) throw new SKError('E001007');
 
-      const labelIds = await deletedCategory.labels;
+      const labelIds = deletedCategory.labels;
 
       for (const id of labelIds) {
         const label = await Label.findOneAndUpdate({ _id: id }, { $pull: { categories: deletedCategory._id } }, { returnOriginal: false });
