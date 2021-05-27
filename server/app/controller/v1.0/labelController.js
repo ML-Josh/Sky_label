@@ -4,73 +4,80 @@ const SKError = require('~root/server/module/errorHandler/SKError');
 const Label = require('~root/server/app/model/label');
 const Category = require('~server/app/model/category');
 const Tag = require('~server/app/model/tag');
+const Url = require('~server/app/model/url');
+const tagFunction = require('~server/app/function/tag');
+const categoryFunction = require('~server/app/function/category');
 
+// Controllers
 const labelController = {
   // Create Label
   createLabel: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
 
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
+      const { sky_id } = res.locals.__jwtPayload;
 
       const {
         title, url, description, image, remarks, categories, tags,
       } = req.body;
 
-      const label = new Label({
-        title, url, description, image, remarks, user_sky_id,
-      });
+      const existingLabel = await Label.findOne({ sky_id, url, deleted: false });
+      if (existingLabel) throw new SKError('E001013');
 
-      if (tags) {
-        for (const t of tags) {
-          const tag = await Tag.findOne({ title: t, user_sky_id });
-          if (!tag) {
-            const newTag = new Tag({
-              title: t,
-              user_sky_id,
-              labels: label._id,
-            });
-            newTag.save();
-            label.tags.push(newTag._id);
-          } else {
-            tag.labels.push(label._id);
-            tag.save();
-            label.tags.push(tag._id);
-          }
-        }
+      const existingUrl = await Url.findOne({ url });
 
-        if (!categories) {
-          const category = await Category.findOne({ title: 'uncategorized', user_sky_id });
-          if (!category) {
-            const uncategorized = new Category({ title: 'uncategorized', user_sky_id });
-            uncategorized.save();
-            label.categories.push(uncategorized._id);
-          } else {
-            category.labels.push(label._id);
-            category.save();
-            label.categories.push(category._id);
-          }
-        } else {
-          for (const c of categories) {
-            const category = await Category.findOne({ title: c, user_sky_id });
-            if (category) {
-              category.labels.push(label._id);
-              category.save();
-              label.categories.push(category._id);
-            } else {
-              const newCategory = new Category({ title: c, labels: label._id, user_sky_id });
-              newCategory.save();
-              label.categories.push(newCategory._id);
-            }
-          }
-        }
+      if (existingUrl) {
+        existingUrl.likes += 1;
+        existingUrl.save();
 
-        label.save();
+        const newLabel = new Label({
+          title: existingUrl.title,
+          url: existingUrl.url,
+          description: existingUrl.description,
+          image: existingUrl.image,
+          remarks: existingUrl.remarks,
+          likes: existingUrl.likes,
+          sky_id,
+        });
+
+        if (tags) await tagFunction.createTags(tags, newLabel, sky_id, Tag);
+        await categoryFunction.createCategories(categories, newLabel, sky_id, Category);
+
+        newLabel.save();
+
+        // Update like counts for labels
+        await Label.updateMany({ url }, { likes: existingUrl.likes });
 
         res.json({
           status: 'ok',
           data: {
-            label,
+            newLabel,
+          },
+        });
+      } else {
+        const newLabel = new Label({
+          title, url, description, image, remarks, likes: 1, sky_id,
+        });
+
+        if (tags) await tagFunction.createTags(tags, newLabel, sky_id, Tag);
+        await categoryFunction.createCategories(categories, newLabel, sky_id, Category);
+        newLabel.save();
+
+        const newUrl = new Url({
+          title: newLabel.title,
+          url: newLabel.url,
+          description: newLabel.description,
+          image: newLabel.image,
+          remarks: newLabel.remarks,
+          likes: newLabel.likes,
+        });
+        newUrl.save();
+
+        res.json({
+          status: 'OK',
+          data: {
+            newLabel,
+            newUrl,
           },
         });
       }
@@ -97,7 +104,7 @@ const labelController = {
   // Get Labels
   getRecentLabels: async (req, res, next) => {
     try {
-      const labels = await Label.find({ privacy: 'public' })
+      const labels = await Label.find({ privacy: 'public', deleted: false })
         .sort('-createdAt')
         .populate('categories', 'title');
 
@@ -117,7 +124,7 @@ const labelController = {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
 
-      const labels = await Label.find({ user_sky_id: res.locals.__jwtPayload.sky_id }).populate('categories', 'title').populate('tags', 'title');
+      const labels = await Label.find({ sky_id: res.locals.__jwtPayload.sky_id, deleted: false }).populate('categories', 'title').populate('tags', 'title');
 
       res.json({
         status: 'OK',
@@ -141,7 +148,7 @@ const labelController = {
       const label = await Label.findById(req.params.id);
 
       if (!label) throw new SKError('E001007');
-      if (label.user_sky_id !== res.locals.__jwtPayload.sky_id) throw new SKError('E001001');
+      if (label.sky_id !== res.locals.__jwtPayload.sky_id) throw new SKError('E001001');
 
       label.title = title;
       label.url = url;
@@ -168,17 +175,20 @@ const labelController = {
   deleteLabel: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-
-      // const label = await Labels.findOneAndDelete({ _id: req.params.id, user_sky_id: res.locals.__jwtPayload.sky_id });
-
-      // if (!label) throw new SKError('E001007');
+      const { sky_id } = res.locals.__jwtPayload;
 
       const label = await Label.findById(req.params.id);
 
       if (!label) throw new SKError('E001007');
-      if (label.user_sky_id !== res.locals.__jwtPayload.sky_id) throw new SKError('E001001');
+      if (label.sky_id !== res.locals.__jwtPayload.sky_id) throw new SKError('E001001');
 
-      await label.remove();
+      label.deleted = true;
+      label.save();
+
+      await Url.findOneAndUpdate({ url: label.url }, { $inc: { likes: -1 } });
+      await Label.updateMany({ url: label.url }, { $inc: { likes: -1 } });
+      await Category.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
+      await Tag.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
 
       res.json({
         status: 'OK',

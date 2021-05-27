@@ -10,12 +10,12 @@ const categoryController = {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
 
       if (!req.body.title) throw new SKError('E001011');
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
-      const existingCategory = await Category.findOne({ title: req.body.title, user_sky_id });
+      const { sky_id } = res.locals.__jwtPayload;
+      const existingCategory = await Category.findOne({ title: req.body.title, sky_id });
       if (!existingCategory) {
         const newCategory = new Category({
           title: req.body.title,
-          user_sky_id,
+          sky_id,
         });
         newCategory.save();
         res.json({
@@ -39,7 +39,7 @@ const categoryController = {
   getMyCategories: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-      const categories = await Category.find({ user_sky_id: res.locals.__jwtPayload.sky_id });
+      const categories = await Category.find({ sky_id: res.locals.__jwtPayload.sky_id });
 
       res.json({
         status: 'OK',
@@ -56,11 +56,11 @@ const categoryController = {
   updateCategory: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
+      const { sky_id } = res.locals.__jwtPayload;
 
       if (!req.body.title) throw new SKError('E001011');
 
-      const updatedCategory = await Category.findOneAndUpdate({ user_sky_id, _id: req.params.id }, { title: req.body.title }, { new: true });
+      const updatedCategory = await Category.findOneAndUpdate({ sky_id, _id: req.params.id }, { title: req.body.title }, { new: true });
 
       res.json({
         status: 'OK',
@@ -77,9 +77,9 @@ const categoryController = {
   deleteCategory: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
+      const { sky_id } = res.locals.__jwtPayload;
 
-      const deletedCategory = await Category.findOneAndDelete({ user_sky_id, _id: req.params.id });
+      const deletedCategory = await Category.findOneAndDelete({ sky_id, _id: req.params.id });
       if (!deletedCategory) throw new SKError('E001007');
 
       const labelIds = deletedCategory.labels;
@@ -88,10 +88,10 @@ const categoryController = {
         const label = await Label.findOneAndUpdate({ _id: id }, { $pull: { categories: deletedCategory._id } }, { returnOriginal: false });
 
         if (label.categories.length === 0) {
-          const uncategorized = await Category.findOne({ user_sky_id, title: 'uncategorized' });
+          const uncategorized = await Category.findOne({ sky_id, title: 'uncategorized' });
 
           if (!uncategorized) {
-            const newCategory = new Category({ title: 'uncategorized', user_sky_id });
+            const newCategory = new Category({ title: 'uncategorized', sky_id });
             newCategory.labels.push(label._id);
             newCategory.save();
             label.categories.push(newCategory._id);

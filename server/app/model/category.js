@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const _schema = new mongoose.Schema({
-  user_sky_id: {
+  sky_id: {
     type: String,
     index: true,
   },

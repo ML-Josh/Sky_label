@@ -8,8 +8,8 @@ const tagController = {
   updateTag: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
-      const updatedTag = await Tag.findOneAndUpdate({ _id: req.params.id, user_sky_id }, { title: req.body.title }, { new: true });
+      const { sky_id } = res.locals.__jwtPayload;
+      const updatedTag = await Tag.findOneAndUpdate({ _id: req.params.id, sky_id }, { title: req.body.title }, { new: true });
 
       if (!updatedTag) throw new SKError('E001007');
 
@@ -27,9 +27,9 @@ const tagController = {
   deleteTag: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
+      const { sky_id } = res.locals.__jwtPayload;
 
-      const deletedTag = await Tag.findOneAndDelete({ _id: req.params.id, user_sky_id });
+      const deletedTag = await Tag.findOneAndDelete({ _id: req.params.id, sky_id });
 
       if (!deletedTag) throw new SKError('E001007');
 

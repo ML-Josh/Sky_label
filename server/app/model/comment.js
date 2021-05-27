@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const _schema = new mongoose.Schema({
-  user_sky_id: String,
+  sky_id: String,
   user_name: String,
   user_img: String,
   context: String,

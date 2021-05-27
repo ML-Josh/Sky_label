@@ -8,14 +8,14 @@ const commentController = {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
 
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
-      const user = await User.findOne({ sky_id: user_sky_id });
+      const { sky_id } = res.locals.__jwtPayload;
+      const user = await User.findOne({ sky_id });
       const label = await Label.findOne({ _id: req.params.id });
 
       if (!label) throw new SKError('E001001');
 
       const newComment = await new Comment({
-        user_sky_id,
+        sky_id,
         user_name: user.name,
         user_img: user.img,
         context: req.body.context,
@@ -42,9 +42,9 @@ const commentController = {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
 
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
+      const { sky_id } = res.locals.__jwtPayload;
 
-      const comment = await Comment.findOneAndUpdate({ user_sky_id, _id: req.params.id }, { context: req.body.context }, { new: true });
+      const comment = await Comment.findOneAndUpdate({ sky_id, _id: req.params.id }, { context: req.body.context }, { new: true });
 
       if (!comment) throw new SKError('E001007');
 
@@ -62,10 +62,10 @@ const commentController = {
   deleteComment: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-      const user_sky_id = res.locals.__jwtPayload.sky_id;
+      const { sky_id } = res.locals.__jwtPayload;
 
       const label = await Label.findOneAndUpdate({
-        user_sky_id,
+        sky_id,
         comment_ids: req.params.id,
       }, {
         $pull: { comment_ids: req.params.id },
@@ -73,7 +73,7 @@ const commentController = {
 
       if (!label) throw new SKError('E001007');
 
-      const comment = await Comment.findOneAndDelete({ user_sky_id, _id: req.params.id });
+      const comment = await Comment.findOneAndDelete({ sky_id, _id: req.params.id });
 
       if (!comment) throw new SKError('E001007');
 
