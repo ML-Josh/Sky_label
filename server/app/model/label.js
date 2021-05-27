@@ -9,6 +9,7 @@ const _schema = new mongoose.Schema({
   remarks: String,
   categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
+  comment_ids: [String],
   privacy: {
     type: String,
     default: 'public',

@@ -33,6 +33,8 @@ router.use('/api/v1.0/category', jwtAutoRefresh({ cookieName: '__SKLT', cookieOp
 
 router.use('/api/v1.0/tag', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 360000 }, secret: config.JWT_SECRET }), require('./tag'));
 
+router.use('/api/v1.0/comment', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 360000 }, secret: config.JWT_SECRET }), require('./comment'));
+
 router.use('/api/v1.0', jwtAutoRefresh({ cookieName: '__SKLT', cookieOptions: { maxAge: 360000 }, secret: config.JWT_SECRET }), require('./home'));
 
 module.exports = (app) => { app.use(router); };

@@ -95,9 +95,11 @@ const labelController = {
   },
 
   // Get Labels
-  getLabels: async (req, res, next) => {
+  getRecentLabels: async (req, res, next) => {
     try {
-      const labels = await Label.find({}).populate('categories', 'title');
+      const labels = await Label.find({ privacy: 'public' })
+        .sort('-createdAt')
+        .populate('categories', 'title');
 
       res.json({
         status: 'OK',
