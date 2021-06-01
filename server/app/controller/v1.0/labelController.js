@@ -102,10 +102,26 @@ const labelController = {
   },
 
   // Get Labels
-  getRecentLabels: async (req, res, next) => {
+  getLabels: async (req, res, next) => {
     try {
-      const labels = await Label.find({ privacy: 'public', deleted: false })
-        .sort('-createdAt')
+      const { sort, search } = req.query; // recent || likes
+      let _sort = '-createdAt';
+      if (sort === 'likes') _sort = '-likes -createdAt';
+
+      const condition = { privacy: 'public', deleted: false };
+
+      const _search = new RegExp(search, 'i');
+
+      const or = [];
+      if (search) {
+        or.push({ title: _search });
+        or.push({ url: _search });
+        or.push({ description: _search });
+      }
+      if (or.length > 0) condition.$or = or;
+
+      const labels = await Label.find(condition)
+        .sort(_sort)
         .populate('categories', 'title');
 
       res.json({
