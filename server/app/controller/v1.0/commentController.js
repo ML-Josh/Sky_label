@@ -24,6 +24,7 @@ const commentController = {
       newComment.save();
 
       label.comment_ids.push(newComment._id);
+      label.interaction += 1;
       label.save();
 
       res.json({
@@ -69,6 +70,7 @@ const commentController = {
         comment_ids: req.params.id,
       }, {
         $pull: { comment_ids: req.params.id },
+        $inc: { interaction: -1 },
       }, { new: true });
 
       if (!label) throw new SKError('E001007');

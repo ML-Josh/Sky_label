@@ -117,12 +117,18 @@ const labelController = {
       const _search = new RegExp(search, 'i');
 
       const or = [];
-      if (search) {
-        or.push({ title: _search });
-        or.push({ url: _search });
-        or.push({ description: _search });
+
+      if (!res.locals.__jwtError) {
+        const tag = await Tag.findOne({ title: _search, sky_id: res.locals.__jwtPayload.sky_id });
+        if (tag) or.push({ tags: tag._id });
       }
+
+      or.push({ title: _search });
+      or.push({ url: _search });
+      or.push({ description: _search });
+
       if (or.length > 0) condition.$or = or;
+      console.log(or);
 
       const labels = await Label.find(condition)
         .sort(_sort)
@@ -173,9 +179,7 @@ const labelController = {
       label.remarks = remarks;
       label.privacy = privacy;
 
-      if (tags) {
-        tagFunction.createOrUpdateTags(tags, label, sky_id, Tag);
-      }
+      if (tags) await tagFunction.createOrUpdateTags(tags, label, sky_id, Tag);
       await categoryFunction.createOrUpdateCategories(categories, label, sky_id, Category);
       label.save();
 
@@ -203,8 +207,8 @@ const labelController = {
       label.deleted = true;
       label.save();
 
-      await Url.findOneAndUpdate({ url: label.url }, { $inc: { fav_count: -1 } });
-      await Label.updateMany({ url: label.url }, { $inc: { fav_count: -1 } });
+      await Url.findOneAndUpdate({ url_encode: label.url_encode }, { $inc: { fav_count: -1 } });
+      await Label.updateMany({ url_encode: label.url_encode }, { $inc: { fav_count: -1 } });
       await Category.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
       await Tag.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
 

@@ -17,7 +17,7 @@ const _schema = new mongoose.Schema({
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
   comment_ids: [String],
   privacy: { type: String, default: 'public' },
-  interaction_count: { type: Number, default: 0 },
+  interaction: { type: Number, default: 0 },
   fav_count: { type: Number, default: 0 },
   deleted: { type: Boolean, default: false },
 }, { timestamps: true });

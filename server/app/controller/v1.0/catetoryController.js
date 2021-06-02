@@ -11,25 +11,18 @@ const categoryController = {
 
       if (!req.body.title) throw new SKError('E001011');
       const { sky_id } = res.locals.__jwtPayload;
-      const existingCategory = await Category.findOne({ title: req.body.title, sky_id });
+      let existingCategory = await Category.findOne({ title: req.body.title, sky_id });
       if (!existingCategory) {
-        const newCategory = new Category({
+        existingCategory = new Category({
           title: req.body.title,
           sky_id,
         });
-        newCategory.save();
-        res.json({
-          status: 'OK',
-          data: {
-            newCategory,
-          },
-        });
-      } else {
-        res.json({
-          status: 'OK',
-          existingCategory,
-        });
+        existingCategory.save();
       }
+      res.json({
+        status: 'OK',
+        existingCategory,
+      });
     } catch (e) {
       next(e);
     }
@@ -39,7 +32,7 @@ const categoryController = {
   getMyCategories: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-      const categories = await Category.find({ sky_id: res.locals.__jwtPayload.sky_id });
+      const categories = await Category.find({ sky_id: res.locals.__jwtPayload.sky_id }).populate('labels', '_id url title');
 
       res.json({
         status: 'OK',
