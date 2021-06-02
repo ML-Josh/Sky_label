@@ -41,6 +41,7 @@
   "dependencies": {
     "axios": "^0.21.1",
     "body-parser": "^1.18.3",
+    "cheerio": "^1.0.0-rc.9",
     "cookie-parser": "^1.4.3",
     "cross-env": "^7.0.2",
     "express": "^4.16.3",
@@ -51,6 +52,7 @@
     "module-alias": "^2.1.0",
     "mongoose": "^5.10.5",
     "pug": "^3.0.0",
+    "random-useragent": "^0.5.0",
     "validator": "^13.1.1"
   },
   "devDependencies": {

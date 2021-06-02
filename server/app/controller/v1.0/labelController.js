@@ -7,6 +7,8 @@ const Tag = require('~server/app/model/tag');
 const Url = require('~server/app/model/url');
 const tagFunction = require('~server/app/function/tag');
 const categoryFunction = require('~server/app/function/category');
+const urlParser = require('~server/app/function/parser/urlParser');
+const pageParser = require('~server/app/function/parser/pageParser');
 
 // Controllers
 const labelController = {
@@ -18,69 +20,71 @@ const labelController = {
       const { sky_id } = res.locals.__jwtPayload;
 
       const {
-        title, url, description, image, remarks, categories, tags,
+        url, categories, tags, remarks, privacy,
       } = req.body;
 
-      const existingLabel = await Label.findOne({ sky_id, url, deleted: false });
+      const urlObj = urlParser(url);
+
+      const existingLabel = await Label.findOne({ sky_id, url_encode: urlObj.url_encode, deleted: false });
       if (existingLabel) throw new SKError('E001013');
 
-      const existingUrl = await Url.findOne({ url });
+      let existingUrl = await Url.findOne({ url_encode: urlObj.url_encode });
 
-      if (existingUrl) {
-        existingUrl.likes += 1;
-        existingUrl.save();
+      if (!existingUrl) {
+        const pageInfo = await pageParser(url);
+        const image = (pageInfo.images || [])[0] || {};
 
-        const newLabel = new Label({
-          title: existingUrl.title,
-          url: existingUrl.url,
-          description: existingUrl.description,
-          image: existingUrl.image,
-          remarks: existingUrl.remarks,
-          likes: existingUrl.likes,
-          sky_id,
-        });
+        existingUrl = {
+          url: urlObj.url,
+          url_encode: urlObj.url_encode,
+          protocol: urlObj.protocol,
+          host: urlObj.host,
+          image: image.url,
+          image_width: image.width,
+          image_height: image.height,
+          title: pageInfo.title,
+          description: pageInfo.description,
+          fav_count: 1,
+        };
 
-        if (tags) await tagFunction.createTags(tags, newLabel, sky_id, Tag);
-        await categoryFunction.createCategories(categories, newLabel, sky_id, Category);
-
-        newLabel.save();
-
-        // Update like counts for labels
-        await Label.updateMany({ url }, { likes: existingUrl.likes });
-
-        res.json({
-          status: 'ok',
-          data: {
-            newLabel,
-          },
-        });
-      } else {
-        const newLabel = new Label({
-          title, url, description, image, remarks, likes: 1, sky_id,
-        });
-
-        if (tags) await tagFunction.createTags(tags, newLabel, sky_id, Tag);
-        await categoryFunction.createCategories(categories, newLabel, sky_id, Category);
-        newLabel.save();
-
-        const newUrl = new Url({
-          title: newLabel.title,
-          url: newLabel.url,
-          description: newLabel.description,
-          image: newLabel.image,
-          remarks: newLabel.remarks,
-          likes: newLabel.likes,
-        });
+        const newUrl = new Url(existingUrl);
         newUrl.save();
-
-        res.json({
-          status: 'OK',
-          data: {
-            newLabel,
-            newUrl,
-          },
-        });
+      } else {
+        existingUrl.fav_count += 1;
+        existingUrl.save();
+        // Update like count for user Labels
+        await Label.updateMany({ url_encode: urlObj.url_encode }, { fav_count: existingUrl.fav_count }, { new: true });
       }
+
+      const newLabel = new Label({
+        sky_id,
+        url: urlObj.url,
+        url_encode: urlObj.url_encode,
+        title: existingUrl.title,
+        host: urlObj.host,
+        hash: urlObj.hash,
+        utm: urlObj.utm,
+        remarks,
+        description: existingUrl.description,
+        image: existingUrl.image,
+        image_width: existingUrl.width,
+        image_height: existingUrl.height,
+        fav_count: existingUrl.fav_count,
+        privacy,
+      });
+
+      // Create or update tags and categories
+      if (tags) await tagFunction.createOrUpdateTags(tags, newLabel, sky_id, Tag);
+      await categoryFunction.createOrUpdateCategories(categories, newLabel, sky_id, Category);
+
+      newLabel.save();
+
+      res.json({
+        status: 'OK',
+        data: {
+          newLabel,
+        },
+      });
     } catch (e) {
       next(e);
     }
@@ -104,9 +108,9 @@ const labelController = {
   // Get Labels
   getLabels: async (req, res, next) => {
     try {
-      const { sort, search } = req.query; // recent || likes
+      const { sort, search } = req.query; // sort: recent || fav_count
       let _sort = '-createdAt';
-      if (sort === 'likes') _sort = '-likes -createdAt';
+      if (sort === 'fav_count') _sort = '-fav_count -createdAt';
 
       const condition = { privacy: 'public', deleted: false };
 
@@ -156,25 +160,23 @@ const labelController = {
   updateLabel: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
-
+      const { sky_id } = res.locals.__jwtPayload;
       const {
-        title, url, description, image, remarks, tag, privacy, categories,
+        remarks, tags, privacy, categories,
       } = req.body;
 
       const label = await Label.findById(req.params.id);
 
       if (!label) throw new SKError('E001007');
-      if (label.sky_id !== res.locals.__jwtPayload.sky_id) throw new SKError('E001001');
+      if (label.sky_id !== sky_id) throw new SKError('E001001');
 
-      label.title = title;
-      label.url = url;
-      label.description = description;
-      label.image = image;
       label.remarks = remarks;
-      label.tag = tag;
       label.privacy = privacy;
-      label.category = categories;
 
+      if (tags) {
+        tagFunction.createOrUpdateTags(tags, label, sky_id, Tag);
+      }
+      await categoryFunction.createOrUpdateCategories(categories, label, sky_id, Category);
       label.save();
 
       res.json({
@@ -201,8 +203,8 @@ const labelController = {
       label.deleted = true;
       label.save();
 
-      await Url.findOneAndUpdate({ url: label.url }, { $inc: { likes: -1 } });
-      await Label.updateMany({ url: label.url }, { $inc: { likes: -1 } });
+      await Url.findOneAndUpdate({ url: label.url }, { $inc: { fav_count: -1 } });
+      await Label.updateMany({ url: label.url }, { $inc: { fav_count: -1 } });
       await Category.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
       await Tag.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
 

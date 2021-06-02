@@ -1,4 +1,4 @@
-const createCategories = async (categories, label, sky_id, Model) => {
+const createOrUpdateCategories = async (categories, label, sky_id, Model) => {
   if (!categories) {
     const category = await Model.findOne({ title: 'uncategorized', sky_id });
     if (!category) {
@@ -26,4 +26,4 @@ const createCategories = async (categories, label, sky_id, Model) => {
   }
 };
 
-module.exports = { createCategories };
+module.exports = { createOrUpdateCategories };

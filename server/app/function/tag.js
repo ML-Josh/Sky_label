@@ -1,4 +1,4 @@
-const createTags = async (tags, label, sky_id, Model) => {
+const createOrUpdateTags = async (tags, label, sky_id, Model) => {
   for (const t of tags) {
     const tag = await Model.findOne({ title: t, sky_id });
     if (!tag) {
@@ -17,4 +17,4 @@ const createTags = async (tags, label, sky_id, Model) => {
   }
 };
 
-module.exports = { createTags };
+module.exports = { createOrUpdateTags };
