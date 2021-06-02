@@ -21,5 +21,8 @@
     "statusBar.foreground": "#15202b",
     "statusBarItem.hoverBackground": "#f7df1e"
   },
-  "peacock.color": "#f9e64f"
+  "peacock.color": "#f9e64f",
+  "cSpell.words": [
+    "uncategorized"
+  ]
 }
