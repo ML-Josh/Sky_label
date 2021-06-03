@@ -18,6 +18,7 @@ const _schema = new mongoose.Schema({
   comment_ids: [String],
   privacy: { type: String, default: 'public' },
   interaction: { type: Number, default: 0 },
+  isFavorite: { type: Boolean, default: false },
   fav_count: { type: Number, default: 0 },
   deleted: { type: Boolean, default: false },
 }, { timestamps: true });

@@ -20,7 +20,7 @@ const labelController = {
       const { sky_id } = res.locals.__jwtPayload;
 
       const {
-        url, categories, tags, remarks, privacy,
+        url, categories, tags, remarks, privacy, isFavorite,
       } = req.body;
 
       const urlObj = urlParser(url);
@@ -70,6 +70,7 @@ const labelController = {
         image_width: existingUrl.width,
         image_height: existingUrl.height,
         fav_count: existingUrl.fav_count,
+        isFavorite,
         privacy,
       });
 
@@ -105,30 +106,30 @@ const labelController = {
     }
   },
 
-  // Get Labels
-  getLabels: async (req, res, next) => {
+  // Get my Labels
+  getMyLabels: async (req, res, next) => {
     try {
-      const { sort, search } = req.query; // sort: recent || fav_count
-      let _sort = '-createdAt';
-      if (sort === 'fav_count') _sort = '-fav_count -createdAt';
+      if (res.locals.__jwtError) throw new SKError('E001001');
+      const { sky_id } = res.locals.__jwtPayload;
 
-      const condition = { privacy: 'public', deleted: false };
+      const { sort, search } = req.query; // sort: recent || fav_count
+      let _sort = { isFavorite: -1, createdAt: -1 };
+      if (sort === 'fav_count') _sort = { fav_count: -1, createdAt: -1 };
+
+      const condition = { deleted: false, sky_id };
 
       const _search = new RegExp(search, 'i');
 
       const or = [];
 
-      if (!res.locals.__jwtError) {
-        const tag = await Tag.findOne({ title: _search, sky_id: res.locals.__jwtPayload.sky_id });
-        if (tag) or.push({ tags: tag._id });
-      }
+      const tag = await Tag.findOne({ title: _search, sky_id: res.locals.__jwtPayload.sky_id });
+      if (tag) or.push({ tags: tag._id });
 
       or.push({ title: _search });
       or.push({ url: _search });
       or.push({ description: _search });
 
       if (or.length > 0) condition.$or = or;
-      console.log(or);
 
       const labels = await Label.find(condition)
         .sort(_sort)
@@ -145,12 +146,28 @@ const labelController = {
     }
   },
 
-  // Get my Labels
-  getMyLabels: async (req, res, next) => {
+  // Get labels
+  getLabels: async (req, res, next) => {
     try {
-      if (res.locals.__jwtError) throw res.locals.__jwtError;
+      const { sort, search } = req.query; // sort: recent || fav_count
+      let _sort = { createdAt: -1 };
+      if (sort === 'fav_count') _sort = { fav_count: -1, createdAt: -1 };
 
-      const labels = await Label.find({ sky_id: res.locals.__jwtPayload.sky_id, deleted: false }).populate('categories', 'title').populate('tags', 'title');
+      const condition = { privacy: 'public', deleted: false };
+
+      const _search = new RegExp(search, 'i');
+
+      const or = [];
+
+      or.push({ title: _search });
+      or.push({ url: _search });
+      or.push({ description: _search });
+
+      if (or.length > 0) condition.$or = or;
+
+      const labels = await Label.find(condition)
+        .sort(_sort)
+        .populate('categories', 'title');
 
       res.json({
         status: 'OK',
@@ -168,7 +185,7 @@ const labelController = {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
       const { sky_id } = res.locals.__jwtPayload;
       const {
-        remarks, tags, privacy, categories,
+        remarks, tags, privacy, categories, isFavorite,
       } = req.body;
 
       const label = await Label.findById(req.params.id);
@@ -178,6 +195,7 @@ const labelController = {
 
       label.remarks = remarks;
       label.privacy = privacy;
+      label.isFavorite = isFavorite;
 
       if (tags) await tagFunction.createOrUpdateTags(tags, label, sky_id, Tag);
       await categoryFunction.createOrUpdateCategories(categories, label, sky_id, Category);
