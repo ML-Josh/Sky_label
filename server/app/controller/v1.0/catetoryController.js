@@ -8,6 +8,7 @@ const categoryController = {
   createCategory: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
 
       if (!req.body.title) throw new SKError('E001011');
       const { sky_id } = res.locals.__jwtPayload;
@@ -32,6 +33,7 @@ const categoryController = {
   getMyCategories: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const categories = await Category.find({ sky_id: res.locals.__jwtPayload.sky_id }).populate('labels', '_id url title');
 
       res.json({
@@ -49,6 +51,7 @@ const categoryController = {
   updateCategory: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const { sky_id } = res.locals.__jwtPayload;
 
       if (!req.body.title) throw new SKError('E001011');
@@ -70,6 +73,7 @@ const categoryController = {
   deleteCategory: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const { sky_id } = res.locals.__jwtPayload;
 
       const deletedCategory = await Category.findOneAndDelete({ sky_id, _id: req.params.id });

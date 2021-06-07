@@ -17,6 +17,7 @@ const labelController = {
   createLabel: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
 
       const { sky_id } = res.locals.__jwtPayload;
 
@@ -113,7 +114,8 @@ const labelController = {
   // Get my Labels
   getMyLabels: async (req, res, next) => {
     try {
-      if (res.locals.__jwtError) throw new SKError('E001001');
+      if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const { sky_id } = res.locals.__jwtPayload;
 
       const { sort, search } = req.query; // sort: recent || fav_count || read_later
@@ -152,7 +154,8 @@ const labelController = {
   // Get read later labels
   getMyReadLater: async (req, res, next) => {
     try {
-      if (res.locals.__jwtError) throw new SKError('E001001');
+      if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
 
       const { sky_id } = res.locals.__jwtPayload;
 
@@ -206,6 +209,7 @@ const labelController = {
   updateLabel: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const { sky_id } = res.locals.__jwtPayload;
       const {
         remarks, tags, privacy, categories, isFavorite, read_later,
@@ -239,6 +243,7 @@ const labelController = {
   deleteLabel: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const { sky_id } = res.locals.__jwtPayload;
 
       const label = await Label.findOne({ _id: req.params.id, deleted: false });
@@ -270,7 +275,8 @@ const labelController = {
 
   getMyDeletedLabels: async (req, res, next) => {
     try {
-      if (res.locals.__jwtError) throw new SKError('E001001');
+      if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
 
       const { sky_id } = res.locals.__jwtPayload;
 

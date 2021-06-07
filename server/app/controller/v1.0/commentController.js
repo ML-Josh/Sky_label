@@ -7,6 +7,7 @@ const commentController = {
   createComment: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
 
       const { sky_id } = res.locals.__jwtPayload;
       const user = await User.findOne({ sky_id });
@@ -42,6 +43,7 @@ const commentController = {
   updateComment: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
 
       const { sky_id } = res.locals.__jwtPayload;
 
@@ -63,6 +65,7 @@ const commentController = {
   deleteComment: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const { sky_id } = res.locals.__jwtPayload;
 
       const label = await Label.findOneAndUpdate({

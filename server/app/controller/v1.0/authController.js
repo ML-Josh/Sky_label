@@ -35,6 +35,7 @@ const authController = {
         payload: {
           sky_id: user.sky_id,
           role: user.role,
+          deactivated: user.deactivated,
         },
         secret: config.JWT_SECRET,
         tokenlife: '1h',
@@ -43,6 +44,7 @@ const authController = {
         payload: {
           sky_id: user.sky_id,
           role: user.role,
+          deactivated: user.deactivated,
         },
         secret: config.JWT_SECRET,
         tokenlife: '7d',

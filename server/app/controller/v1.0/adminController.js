@@ -37,6 +37,25 @@ const adminController = {
     }
   },
 
+  updateUser: async (req, res, next) => {
+    try {
+      const { role } = res.locals.__jwtPayload;
+
+      if (role !== 'ADMIN') throw new SKError('E001001');
+
+      const user = await User.findOneAndUpdate({ _id: req.params.id }, { name: req.body.name, email: req.body.email, deactivated: req.body.deactivated }, { new: true });
+
+      res.json({
+        status: 'OK',
+        data: {
+          user,
+        },
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+
   getUserLabels: async (req, res, next) => {
     try {
       const { role } = res.locals.__jwtPayload;

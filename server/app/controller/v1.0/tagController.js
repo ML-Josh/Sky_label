@@ -8,6 +8,7 @@ const tagController = {
   updateTag: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const { sky_id } = res.locals.__jwtPayload;
       const updatedTag = await Tag.findOneAndUpdate({ _id: req.params.id, sky_id }, { title: req.body.title }, { new: true });
 
@@ -27,6 +28,7 @@ const tagController = {
   deleteTag: async (req, res, next) => {
     try {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
+      if (res.locals.__jwtPayload.deactivated === true) throw new SKError('E001014');
       const { sky_id } = res.locals.__jwtPayload;
 
       const deletedTag = await Tag.findOneAndDelete({ _id: req.params.id, sky_id });

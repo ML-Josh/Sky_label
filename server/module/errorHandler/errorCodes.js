@@ -14,6 +14,7 @@ const codes = [
   { code: 'E001011', http: 400, message: { zh: '必填欄位空白', en: 'Required fields are missing.' } },
   { code: 'E001012', http: 400, message: { zh: '無效的用戶名和密碼', en: 'Please provide a valid username and password.' } },
   { code: 'E001013', http: 400, message: { zh: '書籤已經存在', en: 'Label already exists.' } },
+  { code: 'E001014', http: 400, message: { zh: '賬號被停用', en: 'Account deactivated' } },
 
   // E011xxx
   // 系統內部錯誤，僅顯示簡單訊息

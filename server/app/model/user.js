@@ -8,6 +8,7 @@ const _schema = new mongoose.Schema({
   password: { type: String },
   role: { type: String, required: true, default: 'USER' }, // USER || ADMIN
   label_count: { type: Number, default: 0 },
+  deactivated: { type: Boolean, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', _schema);
