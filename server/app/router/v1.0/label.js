@@ -9,5 +9,6 @@ router.get('/:id', labelController.getLabel);
 router.post('/create', labelController.createLabel);
 router.put('/:id', labelController.updateLabel);
 router.delete('/:id', labelController.deleteLabel);
+router.get('/my/deleted', labelController.getMyDeletedLabels);
 
 module.exports = router;

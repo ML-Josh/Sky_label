@@ -20,7 +20,7 @@ const labelController = {
       const { sky_id } = res.locals.__jwtPayload;
 
       const {
-        url, categories, tags, remarks, privacy, isFavorite,
+        url, categories, tags, remarks, privacy, isFavorite, read_later,
       } = req.body;
 
       const urlObj = urlParser(url);
@@ -52,7 +52,7 @@ const labelController = {
       } else {
         existingUrl.fav_count += 1;
         existingUrl.save();
-        // Update like count for user Labels
+        // Update favorite count for user Labels
         await Label.updateMany({ url_encode: urlObj.url_encode }, { fav_count: existingUrl.fav_count }, { new: true });
       }
 
@@ -72,6 +72,7 @@ const labelController = {
         fav_count: existingUrl.fav_count,
         isFavorite,
         privacy,
+        read_later,
       });
 
       // Create or update tags and categories
@@ -112,7 +113,7 @@ const labelController = {
       if (res.locals.__jwtError) throw new SKError('E001001');
       const { sky_id } = res.locals.__jwtPayload;
 
-      const { sort, search } = req.query; // sort: recent || fav_count
+      const { sort, search } = req.query; // sort: recent || fav_count || read_later
       let _sort = { isFavorite: -1, createdAt: -1 };
       if (sort === 'fav_count') _sort = { fav_count: -1, createdAt: -1 };
 
@@ -134,6 +135,25 @@ const labelController = {
       const labels = await Label.find(condition)
         .sort(_sort)
         .populate('categories', 'title');
+
+      res.json({
+        status: 'OK',
+        data: {
+          labels,
+        },
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+  // Get read later labels
+  getMyReadLater: async (req, res, next) => {
+    try {
+      if (res.locals.__jwtError) throw new SKError('E001001');
+
+      const { sky_id } = res.locals.__jwtPayload;
+
+      const labels = await Label.find({ sky_id, read_later: true, deleted: false });
 
       res.json({
         status: 'OK',
@@ -185,7 +205,7 @@ const labelController = {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
       const { sky_id } = res.locals.__jwtPayload;
       const {
-        remarks, tags, privacy, categories, isFavorite,
+        remarks, tags, privacy, categories, isFavorite, read_later,
       } = req.body;
 
       const label = await Label.findById(req.params.id);
@@ -196,6 +216,7 @@ const labelController = {
       label.remarks = remarks;
       label.privacy = privacy;
       label.isFavorite = isFavorite;
+      label.read_later = read_later;
 
       if (tags) await tagFunction.createOrUpdateTags(tags, label, sky_id, Tag);
       await categoryFunction.createOrUpdateCategories(categories, label, sky_id, Category);
@@ -226,7 +247,7 @@ const labelController = {
       label.save();
 
       await Url.findOneAndUpdate({ url_encode: label.url_encode }, { $inc: { fav_count: -1 } });
-      await Label.updateMany({ url_encode: label.url_encode }, { $inc: { fav_count: -1 } });
+      await Label.updateMany({ url_encode: label.url_encode }, { $inc: { fav_count: -1 }, deleted_at: Date.now() });
       await Category.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
       await Tag.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
 
@@ -235,6 +256,25 @@ const labelController = {
         msg: 'Label Deleted',
         data: {
           label,
+        },
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  getMyDeletedLabels: async (req, res, next) => {
+    try {
+      if (res.locals.__jwtError) throw new SKError('E001001');
+
+      const { sky_id } = res.locals.__jwtPayload;
+
+      const deletedLabels = await Label.find({ deleted: true, deleted_permanently: false, sky_id });
+
+      res.json({
+        status: 'OK',
+        data: {
+          deletedLabels,
         },
       });
     } catch (e) {

@@ -19,8 +19,11 @@ const _schema = new mongoose.Schema({
   privacy: { type: String, default: 'public' },
   interaction: { type: Number, default: 0 },
   isFavorite: { type: Boolean, default: false },
+  read_later: { type: Boolean, default: false },
   fav_count: { type: Number, default: 0 },
   deleted: { type: Boolean, default: false },
+  deleted_at: { type: Date },
+  deleted_permanently: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Label', _schema);
