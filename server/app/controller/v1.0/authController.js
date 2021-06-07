@@ -34,6 +34,7 @@ const authController = {
       const _access_token = jwt.sign({
         payload: {
           sky_id: user.sky_id,
+          role: user.role,
         },
         secret: config.JWT_SECRET,
         tokenlife: '1h',
@@ -41,6 +42,7 @@ const authController = {
       const refresh_token = jwt.sign({
         payload: {
           sky_id: user.sky_id,
+          role: user.role,
         },
         secret: config.JWT_SECRET,
         tokenlife: '7d',

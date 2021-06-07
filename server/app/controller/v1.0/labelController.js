@@ -9,6 +9,7 @@ const tagFunction = require('~server/app/function/tag');
 const categoryFunction = require('~server/app/function/category');
 const urlParser = require('~server/app/function/parser/urlParser');
 const pageParser = require('~server/app/function/parser/pageParser');
+const User = require('~server/app/model/user');
 
 // Controllers
 const labelController = {
@@ -53,7 +54,7 @@ const labelController = {
         existingUrl.fav_count += 1;
         existingUrl.save();
         // Update favorite count for user Labels
-        await Label.updateMany({ url_encode: urlObj.url_encode }, { fav_count: existingUrl.fav_count }, { new: true });
+        await Label.updateMany({ url_encode: urlObj.url_encode, deleted: false }, { fav_count: existingUrl.fav_count }, { new: true });
       }
 
       const newLabel = new Label({
@@ -74,6 +75,8 @@ const labelController = {
         privacy,
         read_later,
       });
+
+      await User.findOneAndUpdate({ sky_id }, { $inc: { label_count: 1 } });
 
       // Create or update tags and categories
       if (tags) await tagFunction.createOrUpdateTags(tags, newLabel, sky_id, Tag);
@@ -238,7 +241,7 @@ const labelController = {
       if (res.locals.__jwtError) throw res.locals.__jwtError;
       const { sky_id } = res.locals.__jwtPayload;
 
-      const label = await Label.findById(req.params.id);
+      const label = await Label.findOne({ _id: req.params.id, deleted: false });
 
       if (!label) throw new SKError('E001007');
       if (label.sky_id !== res.locals.__jwtPayload.sky_id) throw new SKError('E001001');
@@ -250,6 +253,8 @@ const labelController = {
       await Label.updateMany({ url_encode: label.url_encode }, { $inc: { fav_count: -1 }, deleted_at: Date.now() });
       await Category.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
       await Tag.updateMany({ labels: label._id, sky_id }, { $pull: { labels: label._id } });
+
+      await User.findOneAndUpdate({ sky_id }, { $inc: { label_count: -1 } });
 
       res.json({
         status: 'OK',

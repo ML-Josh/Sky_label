@@ -6,7 +6,8 @@ const _schema = new mongoose.Schema({
   name: { type: String, required: true },
   image: { type: String },
   password: { type: String },
-  role: { type: String, required: true, default: 'USER' },
+  role: { type: String, required: true, default: 'USER' }, // USER || ADMIN
+  label_count: { type: Number, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', _schema);
