@@ -1,5 +1,6 @@
 const SKError = require('~root/server/module/errorHandler/SKError');
 const User = require('~server/app/model/user');
+const Label = require('~server/app/model/label');
 
 const adminController = {
   getUsers: async (req, res, next) => {
@@ -36,6 +37,50 @@ const adminController = {
     }
   },
 
+  getUserLabels: async (req, res, next) => {
+    try {
+      const { role } = res.locals.__jwtPayload;
+
+      if (role !== 'ADMIN') throw new SKError('E001001');
+
+      const user = await User.findById(req.params.id);
+      const userLabels = await Label.find({ sky_id: user.sky_id });
+
+      res.json({
+        status: 'OK',
+        data: {
+          userLabels,
+        },
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  updateUserLabel: async (req, res, next) => {
+    try {
+      const { role } = res.locals.__jwtPayload;
+
+      if (role !== 'ADMIN') throw new SKError('E001001');
+
+      const {
+        categories, tags, remarks, privacy, isFavorite, read_later, deleted,
+      } = req.body;
+
+      const label = await Label.findOneAndUpdate({ _id: req.params.id }, {
+        categories, tags, remarks, privacy, isFavorite, read_later, deleted,
+      }, { new: true });
+
+      res.json({
+        status: 'OK',
+        data: {
+          label,
+        },
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
 };
 
 module.exports = adminController;
